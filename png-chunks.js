@@ -9,7 +9,7 @@
 // We always read: support both compressed (flag=1) and uncompressed (flag=0).
 
 const PNG_SIGNATURE = [137, 80, 78, 71, 13, 10, 26, 10];
-export const OUR_KEYWORD = 'ann.editor';
+const OUR_KEYWORD = 'ann.editor';
 
 // ── CRC32 (PNG uses standard zlib CRC32) ───────────────────────────────────
 
@@ -61,7 +61,7 @@ function findNull(bytes, start, limit) {
  * @param {ArrayBuffer} arrayBuffer - the raw PNG bytes
  * @returns {object | null} - parsed JSON document, or null if absent/invalid
  */
-export function readAnnotationsFromPng(arrayBuffer) {
+function readAnnotationsFromPng(arrayBuffer) {
   const bytes = new Uint8Array(arrayBuffer);
   const view = new DataView(arrayBuffer);
 
@@ -148,7 +148,7 @@ function parseITxtChunk(data) {
  * @param {object} document - the annotation document to serialize
  * @returns {Uint8Array} - the new PNG bytes
  */
-export function writeAnnotationsToPng(arrayBuffer, document) {
+function writeAnnotationsToPng(arrayBuffer, document) {
   const bytes = new Uint8Array(arrayBuffer);
   const view = new DataView(arrayBuffer);
 

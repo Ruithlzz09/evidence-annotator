@@ -41,6 +41,15 @@ body {
   line-height: 1;
 }
 
+/* ── Icons ───────────────────────────────────────────────────────────────── */
+
+.icon {
+  width: 15px;
+  height: 15px;
+  display: block;
+  flex-shrink: 0;
+}
+
 /* ── Button base ─────────────────────────────────────────────────────────── */
 
 #toolbar button {
@@ -54,6 +63,24 @@ body {
   line-height: 1.4;
   white-space: nowrap;
   transition: background 0.1s, color 0.1s;
+}
+
+/* Icon-only square button */
+.btn-icon {
+  width: 30px;
+  height: 28px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Icon + short text button */
+.btn-icon-text {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 9px;
 }
 
 #toolbar button:hover:not(:disabled) {
@@ -146,15 +173,7 @@ body {
   accent-color: #0e639c;
 }
 
-.marker-size-label {
-  font-size: 12px;
-  color: #999;
-  display: inline-flex;
-  align-items: center;
-  gap: 3px;
-}
-
-.marker-size-label input[type="number"] {
+.marker-size-input {
   width: 44px;
   padding: 3px 5px;
   background: #333;
@@ -165,8 +184,8 @@ body {
   -moz-appearance: textfield;
 }
 
-.marker-size-label input[type="number"]::-webkit-outer-spin-button,
-.marker-size-label input[type="number"]::-webkit-inner-spin-button {
+.marker-size-input::-webkit-outer-spin-button,
+.marker-size-input::-webkit-inner-spin-button {
   opacity: 0.5;
 }
 
@@ -182,16 +201,118 @@ body {
 
 /* ── Status bar ──────────────────────────────────────────────────────────── */
 
+@keyframes status-flash {
+  from { opacity: 0.4; }
+  to   { opacity: 1; }
+}
+
 #status {
-  padding: 7px 12px;
-  background: #252526;
-  border-bottom: 1px solid #3a3a3a;
-  font-size: 11px;
-  color: #666;
+  padding: 5px 12px;
+  background: #1e1e1e;
+  border-bottom: 1px solid #2d2d2d;
+  font-size: 11.5px;
+  color: #b0b0b0;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 28px;
+  border-left: 3px solid transparent;
+  transition: border-color 0.2s;
 }
+
+#status.flash { animation: status-flash 0.25s ease-out; }
+
+#status[data-type="success"] { border-left-color: #4ec94e; color: #c5e8c5; }
+#status[data-type="error"]   { border-left-color: #e05252; color: #eaacac; }
+#status[data-type="info"]    { border-left-color: #4a9edd; color: #b0b0b0; }
+
+
+/* ── Text input overlay ──────────────────────────────────────────────────── */
+
+.text-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 200;
+}
+
+.text-overlay.hidden { display: none; }
+
+.text-overlay-box {
+  background: #252526;
+  border: 1px solid #3a3a3a;
+  border-radius: 6px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 300px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.6);
+}
+
+.text-overlay-label {
+  font-size: 12px;
+  color: #999;
+  font-weight: 600;
+}
+
+.text-overlay-box textarea {
+  background: #1e1e1e;
+  border: 1px solid #4a4a4a;
+  border-radius: 4px;
+  color: #ddd;
+  font-size: 13px;
+  font-family: inherit;
+  padding: 8px;
+  resize: vertical;
+  outline: none;
+  min-height: 72px;
+}
+
+.text-overlay-box textarea:focus {
+  border-color: #0e639c;
+}
+
+.text-overlay-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.text-overlay-actions button {
+  padding: 5px 14px;
+  background: #333;
+  color: #ccc;
+  border: 1px solid #4a4a4a;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+}
+
+.text-overlay-actions button:hover { background: #3e3e3e; color: #fff; }
+
+.confirm-box { max-width: 360px; }
+
+.confirm-message {
+  margin: 0;
+  font-size: 13px;
+  color: #ccc;
+  line-height: 1.5;
+}
+
+.btn-danger {
+  background: #8b1a1a !important;
+  border-color: #b02020 !important;
+  color: #fff !important;
+}
+
+.btn-danger:hover { background: #a02020 !important; }
 
 /* ── Canvas area ─────────────────────────────────────────────────────────── */
 

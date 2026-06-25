@@ -1,6 +1,5 @@
 // app.js — editor logic. Document model → Konva nodes. CRUD on annotations.
 
-import { readAnnotationsFromPng, writeAnnotationsToPng } from './png-chunks.js';
 
 const SCHEMA_VERSION = '1.0.0';
 const APP_ID = 'ita-annotator';
@@ -18,6 +17,44 @@ const state = {
 
 let stage, imageLayer, shapeLayer, transformer;
 let drawing = null; // the in-progress annotation while user is dragging
+
+// ── Text overlay (replaces prompt()) ──────────────────────────────────────
+
+let _overlayResolve = null;
+
+function showTextOverlay(label, defaultValue = '') {
+  return new Promise(resolve => {
+    _overlayResolve = resolve;
+    const overlay = document.getElementById('text-overlay');
+    document.getElementById('text-overlay-label').textContent = label;
+    const input = document.getElementById('text-overlay-input');
+    input.value = defaultValue;
+    overlay.classList.remove('hidden');
+    // Place cursor at end
+    requestAnimationFrame(() => { input.focus(); input.setSelectionRange(input.value.length, input.value.length); });
+  });
+}
+
+function _overlayFinish(value) {
+  document.getElementById('text-overlay').classList.add('hidden');
+  if (_overlayResolve) { _overlayResolve(value); _overlayResolve = null; }
+}
+
+let _confirmResolve = null;
+
+function showConfirmOverlay(message) {
+  return new Promise(resolve => {
+    _confirmResolve = resolve;
+    document.getElementById('confirm-message').textContent = message;
+    document.getElementById('confirm-overlay').classList.remove('hidden');
+    document.getElementById('confirm-ok').focus();
+  });
+}
+
+function _confirmFinish(value) {
+  document.getElementById('confirm-overlay').classList.add('hidden');
+  if (_confirmResolve) { _confirmResolve(value); _confirmResolve = null; }
+}
 
 // ── Undo stack ─────────────────────────────────────────────────────────────
 
@@ -39,7 +76,7 @@ function undo() {
   selectNone();
   renderAnnotations();
   document.getElementById('undo-btn').disabled = undoStack.length === 0;
-  setStatus(`Undone. ${state.document.annotations.length} annotation(s) remain.`);
+  setStatus(`Undone. ${state.document.annotations.length} annotation(s) remain.`, 'info');
 }
 
 // ── Initialization ─────────────────────────────────────────────────────────
@@ -128,6 +165,30 @@ function bindUI() {
     if (f) loadFile(f);
   });
 
+  // Confirm overlay buttons
+  document.getElementById('confirm-ok').addEventListener('click', () => _confirmFinish(true));
+  document.getElementById('confirm-cancel').addEventListener('click', () => _confirmFinish(false));
+  document.getElementById('confirm-overlay').addEventListener('keydown', e => {
+    if (e.key === 'Enter') _confirmFinish(true);
+    else if (e.key === 'Escape') _confirmFinish(false);
+  });
+
+  // Text overlay buttons
+  document.getElementById('text-overlay-ok').addEventListener('click', () => {
+    _overlayFinish(document.getElementById('text-overlay-input').value.trim() || null);
+  });
+  document.getElementById('text-overlay-cancel').addEventListener('click', () => {
+    _overlayFinish(null);
+  });
+  document.getElementById('text-overlay-input').addEventListener('keydown', e => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      _overlayFinish(document.getElementById('text-overlay-input').value.trim() || null);
+    } else if (e.key === 'Escape') {
+      _overlayFinish(null);
+    }
+  });
+
   // Keyboard
   window.addEventListener('keydown', e => {
     if (e.target.matches('input, textarea')) return;
@@ -161,7 +222,7 @@ function bindCanvas() {
 
 async function loadFile(file) {
   if (!file.name.toLowerCase().endsWith('.png')) {
-    setStatus(`"${file.name}" is not a PNG. Only PNG files support annotation metadata.`);
+    setStatus(`"${file.name}" is not a PNG. Only PNG files support annotation metadata.`, 'error');
     return;
   }
 
@@ -197,10 +258,10 @@ async function loadFile(file) {
       state.document = doc;
       // Normalize: ensure imageSize matches the actual image
       state.document.imageSize = { w: img.width, h: img.height };
-      setStatus(`Loaded "${file.name}" with ${doc.annotations.length} existing annotation(s).`);
+      setStatus(`Loaded "${file.name}" with ${doc.annotations.length} existing annotation(s).`, 'success');
     } else {
       state.document = newEmptyDocument(img.width, img.height);
-      setStatus(`Loaded "${file.name}" as plain image (no annotations found).`);
+      setStatus(`Loaded "${file.name}" as plain image (no annotations found).`, 'info');
     }
 
     // Reset undo stack for new image
@@ -221,7 +282,7 @@ async function loadFile(file) {
     document.getElementById('drop-hint').style.display = 'none';
     document.getElementById('container').style.display = 'inline-block';
   };
-  img.onerror = () => setStatus(`Failed to render "${file.name}" as an image.`);
+  img.onerror = () => setStatus(`Failed to render "${file.name}" as an image.`, 'error');
   img.src = URL.createObjectURL(file);
 }
 
@@ -473,15 +534,16 @@ function selectNone() {
   shapeLayer.draw();
 }
 
-function deleteAll() {
+async function deleteAll() {
   if (!state.document || state.document.annotations.length === 0) return;
-  if (!confirm(`Delete all ${state.document.annotations.length} annotation(s)?`)) return;
+  const ok = await showConfirmOverlay(`Delete all ${state.document.annotations.length} annotation(s)?`);
+  if (!ok) return;
   pushUndo();
   state.document.annotations = [];
   state.markerCount = 0;
   selectNone();
   renderAnnotations();
-  setStatus('All annotations deleted.');
+  setStatus('All annotations deleted.', 'info');
 }
 
 function deleteSelected() {
@@ -490,7 +552,7 @@ function deleteSelected() {
   state.document.annotations = state.document.annotations.filter(a => a.id !== state.selectedId);
   selectNone();
   renderAnnotations();
-  setStatus(`Deleted. ${state.document.annotations.length} annotation(s) remain.`);
+  setStatus(`Deleted. ${state.document.annotations.length} annotation(s) remain.`, 'info');
 }
 
 // ── Tools / drawing ────────────────────────────────────────────────────────
@@ -508,7 +570,7 @@ function getScaledPointerPosition() {
   return { x: raw.x / stage.scaleX(), y: raw.y / stage.scaleY() };
 }
 
-function onMouseDown(e) {
+async function onMouseDown(e) {
   if (state.tool === 'select') return;
   if (!state.document) return;
 
@@ -565,10 +627,10 @@ function onMouseDown(e) {
     state.document.annotations.push(ann);
     renderAnnotations();
   } else if (state.tool === 'bubble') {
-    const text = prompt('Speech bubble text:');
+    const text = await showTextOverlay('Speech bubble text');
     if (!text) return;
     pushUndo();
-    const size = Math.round(14 / stage.scaleX());
+    const size = Math.round(parseInt(document.getElementById('marker-size').value, 10) / stage.scaleX());
     const ann = {
       id, type: 'bubble',
       x: pos.x, y: pos.y,
@@ -581,10 +643,10 @@ function onMouseDown(e) {
     state.document.annotations.push(ann);
     renderAnnotations();
   } else if (state.tool === 'text') {
-    const text = prompt('Enter text:');
+    const text = await showTextOverlay('Enter text');
     if (!text) return;
     pushUndo();
-    const size = Math.round(18 / stage.scaleX());
+    const size = Math.round(parseInt(document.getElementById('marker-size').value, 10) / stage.scaleX());
     const ann = { id, type: 'text', x: pos.x, y: pos.y, text, size, color: stroke };
     state.document.annotations.push(ann);
     renderAnnotations();
@@ -640,9 +702,9 @@ function onMouseUp() {
 
 // ── Text editing (double-click) ────────────────────────────────────────────
 
-function editTextAnnotation(ann, node) {
-  const next = prompt('Edit text:', ann.text);
-  if (next === null) return; // cancelled
+async function editTextAnnotation(ann, node) {
+  const next = await showTextOverlay('Edit text', ann.text);
+  if (next === null) return;
   ann.text = next;
   node.text(next);
   shapeLayer.draw();
@@ -676,10 +738,10 @@ function saveFile() {
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
 
-    setStatus(`Saved "${downloadName}" with ${state.document.annotations.length} annotation(s).`);
+    setStatus(`Saved "${downloadName}" with ${state.document.annotations.length} annotation(s).`, 'success');
   } catch (e) {
     console.error(e);
-    setStatus(`Save failed: ${e.message}`);
+    setStatus(`Save failed: ${e.message}`, 'error');
   }
 }
 
@@ -712,7 +774,7 @@ function saveFlatImage() {
   a.click();
   document.body.removeChild(a);
 
-  setStatus(`Saved "${downloadName}" as flat image (annotations burned in, not editable).`);
+  setStatus(`Saved "${downloadName}" as flat image (annotations burned in, not editable).`, 'success');
 }
 
 // ── Annotation import / export ────────────────────────────────────────────
@@ -730,7 +792,7 @@ function exportAnnotations() {
   a.click();
   document.body.removeChild(a);
   URL.revokeObjectURL(url);
-  setStatus(`Exported ${state.document.annotations.length} annotation(s) as JSON.`);
+  setStatus(`Exported ${state.document.annotations.length} annotation(s) as JSON.`, 'success');
 }
 
 async function importAnnotations(file) {
@@ -739,17 +801,18 @@ async function importAnnotations(file) {
     const text = await file.text();
     doc = JSON.parse(text);
   } catch {
-    setStatus('Import failed: file is not valid JSON.');
+    setStatus('Import failed: file is not valid JSON.', 'error');
     return;
   }
 
   if (!validateDocument(doc, state.document.imageSize.w, state.document.imageSize.h)) {
-    setStatus('Import failed: JSON does not match annotation schema.');
+    setStatus('Import failed: JSON does not match annotation schema.', 'error');
     return;
   }
 
   if (state.document.annotations.length > 0) {
-    if (!confirm(`Replace ${state.document.annotations.length} existing annotation(s) with ${doc.annotations.length} from the imported file?`)) return;
+    const ok = await showConfirmOverlay(`Replace ${state.document.annotations.length} existing annotation(s) with ${doc.annotations.length} from the imported file?`);
+    if (!ok) return;
   }
 
   pushUndo();
@@ -760,13 +823,18 @@ async function importAnnotations(file) {
 
   selectNone();
   renderAnnotations();
-  setStatus(`Imported ${doc.annotations.length} annotation(s) from "${file.name}".`);
+  setStatus(`Imported ${doc.annotations.length} annotation(s) from "${file.name}".`, 'success');
 }
 
 // ── Status helper ──────────────────────────────────────────────────────────
 
-function setStatus(msg) {
-  document.getElementById('status').textContent = msg;
+function setStatus(msg, type = 'info') {
+  const el = document.getElementById('status');
+  el.textContent = msg;
+  el.dataset.type = type;
+  el.classList.remove('flash');
+  void el.offsetWidth; // reflow to restart animation
+  el.classList.add('flash');
 }
 
 // ── Go ─────────────────────────────────────────────────────────────────────

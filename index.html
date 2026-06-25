@@ -9,42 +9,134 @@
 <body>
   <div id="toolbar">
     <input type="file" id="file-input" accept="image/png" hidden>
+    <input type="file" id="ann-import-input" accept=".json" hidden>
 
+    <!-- Open -->
     <div class="tool-section">
-      <button id="open-btn" class="btn-primary">Open PNG</button>
+      <button id="open-btn" class="btn-primary btn-icon-text">
+        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M6 14l1.45-2.9A2 2 0 0 1 9.24 10H20a2 2 0 0 1 1.94 2.5l-1.55 6a2 2 0 0 1-1.94 1.5H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h3.9a2 2 0 0 1 1.69.9l.81 1.2a2 2 0 0 0 1.67.9H18a2 2 0 0 1 2 2v2"/>
+        </svg>
+        Open PNG
+      </button>
     </div>
 
     <span class="separator"></span>
 
+    <!-- Tools -->
     <div class="tool-section">
       <span class="section-label">Tools</span>
       <div class="btn-group">
-        <button data-tool="select" class="active">Select</button>
-        <button data-tool="rect">Rectangle</button>
-        <button data-tool="highlight">Highlight</button>
-        <button data-tool="line">Line</button>
-        <button data-tool="arrow">Arrow</button>
-        <button data-tool="pen">Pen</button>
-        <button data-tool="text">Text</button>
-        <button data-tool="marker">Marker</button>
-        <button data-tool="bubble">Bubble</button>
-        <button data-tool="redact">Redact</button>
+
+        <button data-tool="select" class="active btn-icon" title="Select — click to select, drag to move">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="m4 4 7.07 17 2.51-7.39L21 11.07z"/>
+          </svg>
+        </button>
+
+        <button data-tool="rect" class="btn-icon" title="Rectangle">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="3" width="18" height="18" rx="2"/>
+          </svg>
+        </button>
+
+        <button data-tool="highlight" class="btn-icon" title="Highlight — semi-transparent fill">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="m9 11-6 6v3h3l6-6"/>
+            <path d="m22 12-4.6 4.6a2 2 0 0 1-2.8 0l-5.2-5.2a2 2 0 0 1 0-2.8L14 4"/>
+          </svg>
+        </button>
+
+        <button data-tool="line" class="btn-icon" title="Line — straight line without arrowhead">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="5" y1="19" x2="19" y2="5"/>
+            <circle cx="5" cy="19" r="2" fill="currentColor" stroke="none"/>
+            <circle cx="19" cy="5" r="2" fill="currentColor" stroke="none"/>
+          </svg>
+        </button>
+
+        <button data-tool="arrow" class="btn-icon" title="Arrow">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M5 12h14"/>
+            <path d="m12 5 7 7-7 7"/>
+          </svg>
+        </button>
+
+        <button data-tool="pen" class="btn-icon" title="Pen — freehand drawing">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 20h9"/>
+            <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/>
+          </svg>
+        </button>
+
+        <button data-tool="text" class="btn-icon" title="Text">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="4 7 4 4 20 4 20 7"/>
+            <line x1="9" y1="20" x2="15" y2="20"/>
+            <line x1="12" y1="4" x2="12" y2="20"/>
+          </svg>
+        </button>
+
+        <button data-tool="marker" class="btn-icon" title="Marker — numbered circle (use ⌀ to set size)">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/>
+            <circle cx="12" cy="10" r="3"/>
+          </svg>
+        </button>
+
+        <button data-tool="bubble" class="btn-icon" title="Speech bubble — click to place, double-click to edit">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+          </svg>
+        </button>
+
+        <button data-tool="redact" class="btn-icon" title="Redact — solid black block">
+          <svg class="icon" viewBox="0 0 24 24">
+            <rect x="2" y="7" width="20" height="10" rx="1" fill="currentColor" stroke="none"/>
+          </svg>
+        </button>
+
       </div>
     </div>
 
     <span class="separator"></span>
 
+    <!-- Edit -->
     <div class="tool-section">
       <span class="section-label">Edit</span>
       <div class="btn-group">
-        <button id="undo-btn" disabled title="Undo last action (Ctrl+Z)">Undo</button>
-        <button id="delete-btn" disabled>Delete</button>
-        <button id="delete-all-btn" disabled>Delete All</button>
+
+        <button id="undo-btn" disabled class="btn-icon" title="Undo (Ctrl+Z)">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
+            <path d="M3 3v5h5"/>
+          </svg>
+        </button>
+
+        <button id="delete-btn" disabled class="btn-icon" title="Delete selected annotation (Del)">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 6h18"/>
+            <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/>
+            <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/>
+            <line x1="10" y1="11" x2="10" y2="17"/>
+            <line x1="14" y1="11" x2="14" y2="17"/>
+          </svg>
+        </button>
+
+        <button id="delete-all-btn" disabled class="btn-icon" title="Delete all annotations">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="m7 21-4.3-4.3c-1-1-1-2.5 0-3.4l9.6-9.6c1-1 2.5-1 3.4 0l5.6 5.6c1 1 1 2.5 0 3.4L13 21"/>
+            <path d="M22 21H7"/>
+            <path d="m5 11 9 9"/>
+          </svg>
+        </button>
+
       </div>
     </div>
 
     <span class="separator"></span>
 
+    <!-- Stroke -->
     <div class="tool-section">
       <span class="section-label">Stroke</span>
       <div class="stroke-controls">
@@ -60,37 +152,86 @@
         </div>
         <input type="color" id="stroke-color" value="#ff0000" title="Custom color">
         <input type="range" id="stroke-width" min="1" max="20" value="3" title="Stroke width">
-        <label class="marker-size-label" title="Marker circle size in screen pixels">
-          ⌀<input type="number" id="marker-size" min="10" max="80" value="20">
-        </label>
+        <input type="number" id="marker-size" min="8" max="120" value="20" title="Size — marker circle radius / text font size (screen px)" class="marker-size-input">
       </div>
     </div>
 
     <span class="separator"></span>
 
+    <!-- Annotations import/export -->
     <div class="tool-section">
       <span class="section-label">Annotations</span>
       <div class="btn-group">
-        <button id="import-ann-btn" disabled title="Load annotations from a JSON file">Import JSON</button>
-        <button id="export-ann-btn" disabled title="Save annotations as a JSON file">Export JSON</button>
+        <button id="import-ann-btn" disabled class="btn-icon-text" title="Load annotations from a JSON file">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+            <polyline points="17 8 12 3 7 8"/>
+            <line x1="12" y1="3" x2="12" y2="15"/>
+          </svg>
+          Import
+        </button>
+        <button id="export-ann-btn" disabled class="btn-icon-text" title="Save annotations as a JSON file">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+            <polyline points="7 10 12 15 17 10"/>
+            <line x1="12" y1="15" x2="12" y2="3"/>
+          </svg>
+          Export
+        </button>
       </div>
     </div>
 
     <span class="separator"></span>
 
+    <!-- Save -->
     <div class="tool-section">
       <span class="section-label">Save</span>
       <div class="btn-group">
-        <button id="save-btn" disabled title="Embed annotations as metadata — reopen to edit">Save Editable</button>
-        <button id="save-flat-btn" disabled title="Burn annotations onto the image pixels">Save Flat</button>
+        <button id="save-btn" disabled class="btn-icon-text" title="Embed annotations as metadata — reopen to edit">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
+            <polyline points="17 21 17 13 7 13 7 21"/>
+            <polyline points="7 3 7 8 15 8"/>
+          </svg>
+          Editable
+        </button>
+        <button id="save-flat-btn" disabled class="btn-icon-text" title="Burn annotations onto the image pixels">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="3" width="18" height="18" rx="2"/>
+            <circle cx="8.5" cy="8.5" r="1.5"/>
+            <polyline points="21 15 16 10 5 21"/>
+          </svg>
+          Flat
+        </button>
       </div>
     </div>
-
-    <input type="file" id="ann-import-input" accept=".json" hidden>
 
   </div>
 
   <div id="status">Ready. Open a PNG to begin.</div>
+
+  <!-- Confirm dialog overlay (replaces confirm()) -->
+  <div id="confirm-overlay" class="text-overlay hidden">
+    <div class="text-overlay-box confirm-box">
+      <p id="confirm-message" class="confirm-message"></p>
+      <div class="text-overlay-actions">
+        <button id="confirm-cancel">Cancel</button>
+        <button id="confirm-ok" class="btn-danger">Confirm</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Inline text-input overlay (replaces prompt()) -->
+  <div id="text-overlay" class="text-overlay hidden">
+    <div class="text-overlay-box">
+      <label id="text-overlay-label" class="text-overlay-label">Text</label>
+      <textarea id="text-overlay-input" rows="3" spellcheck="false"></textarea>
+      <div class="text-overlay-actions">
+        <button id="text-overlay-cancel">Cancel</button>
+        <button id="text-overlay-ok" class="btn-primary">OK</button>
+      </div>
+    </div>
+  </div>
 
   <div id="canvas-area">
     <div id="drop-hint">Drop a PNG here or click "Open PNG"</div>
@@ -99,6 +240,7 @@
 
   <script src="vendor/pako.min.js"></script>
   <script src="vendor/konva.min.js"></script>
-  <script type="module" src="app.js"></script>
+  <script src="png-chunks.js"></script>
+  <script src="app.js"></script>
 </body>
 </html>
