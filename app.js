@@ -169,6 +169,7 @@ function renderAnnotations() {
   if (state.selectedId) {
     const node = shapeLayer.findOne(n => n.id() === state.selectedId);
     transformer.nodes(node ? [node] : []);
+    if (node) _applySelectionGlow(node);
   } else {
     transformer.nodes([]);
   }
@@ -300,17 +301,40 @@ function syncNodeToAnnotation(node, ann) {
 
 // ── Selection ──────────────────────────────────────────────────────────────
 
+function _applySelectionGlow(node) {
+  node.shadowColor('#4a9edd');
+  node.shadowBlur(14);
+  node.shadowOpacity(0.9);
+  node.shadowOffset({ x: 0, y: 0 });
+}
+
+function _clearSelectionGlow(node) {
+  node.shadowBlur(0);
+  node.shadowOpacity(0);
+}
+
 function selectAnnotation(id) {
+  // Clear glow from previously selected node
+  if (state.selectedId) {
+    const prev = shapeLayer.findOne(n => n.id() === state.selectedId);
+    if (prev) _clearSelectionGlow(prev);
+  }
+
   state.selectedId = id;
   const node = shapeLayer.findOne(n => n.id() === id);
   const ann = state.document.annotations.find(a => a.id === id);
   const skipTransform = ann && (ann.type === 'marker' || ann.type === 'pen');
   transformer.nodes(node && !skipTransform ? [node] : []);
+  if (node) _applySelectionGlow(node);
   document.getElementById('delete-btn').disabled = !node;
   shapeLayer.draw();
 }
 
 function selectNone() {
+  if (state.selectedId) {
+    const prev = shapeLayer.findOne(n => n.id() === state.selectedId);
+    if (prev) _clearSelectionGlow(prev);
+  }
   state.selectedId = null;
   transformer.nodes([]);
   document.getElementById('delete-btn').disabled = true;
