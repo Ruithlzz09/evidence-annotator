@@ -1,0 +1,229 @@
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+  background: #1e1e1e;
+  color: #ddd;
+  min-height: 100vh;
+}
+
+/* ── Toolbar ──────────────────────────────────────────────────────────────── */
+
+#toolbar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 6px 12px;
+  min-height: 52px;
+  background: #252526;
+  border-bottom: 1px solid #3a3a3a;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.tool-section {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 5px;
+}
+
+.section-label {
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #666;
+  padding-left: 2px;
+  line-height: 1;
+}
+
+/* ── Button base ─────────────────────────────────────────────────────────── */
+
+#toolbar button {
+  padding: 5px 11px;
+  background: #333;
+  color: #ccc;
+  border: 1px solid #4a4a4a;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+  line-height: 1.4;
+  white-space: nowrap;
+  transition: background 0.1s, color 0.1s;
+}
+
+#toolbar button:hover:not(:disabled) {
+  background: #3e3e3e;
+  color: #fff;
+}
+
+#toolbar button.active {
+  background: #0e639c;
+  border-color: #1177bb;
+  color: #fff;
+}
+
+#toolbar button:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.btn-primary {
+  background: #0e639c !important;
+  border-color: #1177bb !important;
+  color: #fff !important;
+  font-weight: 500;
+}
+
+.btn-primary:hover:not(:disabled) {
+  background: #1177bb !important;
+}
+
+/* ── Button groups ───────────────────────────────────────────────────────── */
+
+.btn-group {
+  display: inline-flex;
+  gap: 4px;
+}
+
+.btn-group button {
+  border-radius: 4px;
+}
+
+/* ── Stroke controls ─────────────────────────────────────────────────────── */
+
+.stroke-controls {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.color-swatches {
+  display: inline-flex;
+  gap: 3px;
+  align-items: center;
+}
+
+.swatch {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 2px solid #555;
+  cursor: pointer;
+  padding: 0;
+  flex-shrink: 0;
+  transition: transform 0.1s, border-color 0.1s;
+}
+
+.swatch:hover {
+  transform: scale(1.25);
+  border-color: #999;
+}
+
+.swatch.active {
+  border-color: #fff;
+  transform: scale(1.2);
+  box-shadow: 0 0 0 1px #777;
+}
+
+
+#toolbar input[type="color"] {
+  width: 24px;
+  height: 24px;
+  border: 1px solid #4a4a4a;
+  border-radius: 4px;
+  background: #333;
+  cursor: pointer;
+  padding: 1px;
+}
+
+#toolbar input[type="range"] {
+  width: 80px;
+  accent-color: #0e639c;
+}
+
+.marker-size-label {
+  font-size: 12px;
+  color: #999;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.marker-size-label input[type="number"] {
+  width: 44px;
+  padding: 3px 5px;
+  background: #333;
+  border: 1px solid #4a4a4a;
+  border-radius: 4px;
+  color: #ccc;
+  font-size: 12px;
+  -moz-appearance: textfield;
+}
+
+.marker-size-label input[type="number"]::-webkit-outer-spin-button,
+.marker-size-label input[type="number"]::-webkit-inner-spin-button {
+  opacity: 0.5;
+}
+
+/* ── Separator ───────────────────────────────────────────────────────────── */
+
+.separator {
+  width: 1px;
+  height: 28px;
+  background: #3a3a3a;
+  flex-shrink: 0;
+  margin: 0 2px;
+}
+
+/* ── Status bar ──────────────────────────────────────────────────────────── */
+
+#status {
+  padding: 7px 12px;
+  background: #252526;
+  border-bottom: 1px solid #3a3a3a;
+  font-size: 11px;
+  color: #666;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ── Canvas area ─────────────────────────────────────────────────────────── */
+
+#canvas-area {
+  position: relative;
+  padding: 20px;
+  min-height: calc(100vh - 52px);
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+}
+
+#drop-hint {
+  width: 100%;
+  color: #555;
+  text-align: center;
+  padding: 100px 20px;
+  border: 2px dashed #383838;
+  border-radius: 8px;
+  font-size: 14px;
+  letter-spacing: 0.01em;
+}
+
+#canvas-area.dropping #drop-hint {
+  background: #1a2a3a;
+  color: #ccc;
+  border-color: #0e639c;
+}
+
+#container {
+  background: #1e1e1e;
+  display: inline-block;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6);
+  border-radius: 2px;
+}
