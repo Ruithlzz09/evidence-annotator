@@ -1,31 +1,33 @@
-# ITa Annotator — Prototype
+# Evidence Annotator — Prototype
 
 Browser-based PNG annotation editor. Annotations are stored as JSON inside the
 PNG itself, in an `iTXt` metadata chunk (keyword: `ann.editor`). Reopen the
-saved PNG anywhere — it's a normal PNG; reopen it in this editor and your
+saved PNG anywhere — it is a normal PNG. Reopen it in this editor and your
 annotations come back as editable shapes.
 
 ## What this prototype proves
 
 1. **`iTXt` round-trip works.** Read annotations from a PNG, edit, write them
-   back. Reopen, edits persist.
+   back. Reopen — edits persist.
 2. **The CRUD model on Konva is workable.** Create / read / update / delete
-   annotations against a shared document object that's the source of truth.
+   annotations against a shared document object that is the source of truth.
 
 If both work here, the production `pywebview + Konva` version is essentially
 the same JS plus a Python file-IO backend.
 
 ## Files
 
-```
+```text
 annotator-prototype/
-├── index.html       — page + toolbar
-├── styles.css       — dark theme, minimal
-├── app.js           — editor logic (document model, tools, selection)
-├── png-chunks.js    — pure-JS iTXt read/write (CRC32 + zlib via pako)
+├── index.html        — page + toolbar markup
+├── styles.css        — dark theme
+├── constants.js      — shared constants (SCHEMA_VERSION, APP_ID, MAX_UNDO)
+├── handlers.js       — DOM event wiring, overlays, status bar
+├── app.js            — editor logic (state, tools, canvas, save, import/export)
+├── png-chunks.js     — pure-JS iTXt read/write (CRC32 + zlib via pako)
 └── vendor/
-    ├── konva.min.js — Konva 9.3.22  (bundled locally, no CDN required)
-    └── pako.min.js  — pako 2.1.0   (bundled locally, no CDN required)
+    ├── konva.min.js  — Konva 9.3.22  (bundled locally, no CDN required)
+    └── pako.min.js   — pako 2.1.0   (bundled locally, no CDN required)
 ```
 
 Dependencies are vendored locally — the app works fully offline.
@@ -40,7 +42,7 @@ Dependencies are vendored locally — the app works fully offline.
 **Upgrade to a newer version:**
 
 ```powershell
-# Replace 2.1.0 / 9.3.22 with the new version numbers
+# Replace version numbers as needed
 Invoke-WebRequest -Uri "https://cdn.jsdelivr.net/npm/pako@2.1.0/dist/pako.min.js" -OutFile "vendor/pako.min.js"
 Invoke-WebRequest -Uri "https://unpkg.com/konva@9.3.22/konva.min.js"              -OutFile "vendor/konva.min.js"
 ```
@@ -52,89 +54,147 @@ Check latest releases:
 
 ## Running locally
 
-You **cannot** open `index.html` via `file://` because ES modules require an
-HTTP origin. Use any local static server:
+Open `index.html` via a local static server (required for JS module loading):
 
 ```bash
 cd annotator-prototype
 python -m http.server 8000
 ```
 
-Then open <http://localhost:8000/> in Chrome/Edge/Firefox/Safari.
+Then open <http://localhost:8000/> in Chrome, Edge, Firefox, or Safari.
 
 ## Hosting
 
-This is a static site — works on GitHub Pages, an internal web server, or
-anywhere that serves files over HTTP(S). No build step, no npm.
+Static site — works on GitHub Pages, an internal web server, or anywhere that
+serves files over HTTP(S). No build step, no npm.
 
 ## Usage
 
-- **Open PNG** — file picker, or drag-drop onto the page.
-- **Tools** — Select / Rectangle / Arrow / Text.
-- **Stroke color / width** — applies to new shapes.
-- **Select** — click a shape. Drag to move. Drag handles to resize.
-- **Edit text** — double-click a text annotation.
-- **Delete** — select + press Delete (or Backspace), or click Delete button.
-- **Save** — downloads `<original>_annotated.png` with annotations embedded.
+### Opening an image
 
-If the file you open already contains valid `ann.editor` annotations, they
-will load as editable shapes. If not (or if metadata is invalid), it loads as
-a plain image with an empty annotation set.
+- Click **Open PNG** or drag-drop a PNG onto the page.
+- Only PNG files support annotation metadata (Save Editable). Other formats
+  could be opened for display and flat-save only.
+
+### Tools
+
+| Tool | How to use |
+| --- | --- |
+| **Select** | Click to select. Drag to move. Drag handles to resize. |
+| **Rectangle** | Click and drag to draw. |
+| **Highlight** | Click and drag — semi-transparent yellow fill. |
+| **Line** | Click and drag — straight line, no arrowhead. |
+| **Arrow** | Click and drag — line with arrowhead at the end. |
+| **Pen** | Click and drag — freehand stroke. |
+| **Text** | Click — inline dialog opens, type text, press OK or Enter. |
+| **Marker** | Click — places a numbered circle. Auto-increments. |
+| **Bubble** | Click — inline dialog opens, type text, press OK or Enter. |
+| **Redact** | Click and drag — solid black block. |
+
+### Stroke controls
+
+- **Color swatches** — 8 preset colors. Click to select.
+- **Color picker** — custom color via browser color input.
+- **Width slider** — stroke width for lines, arrows, rectangles, pen.
+- **Size input** — circle radius for Marker, font size for Text and Bubble
+  (screen pixels; default 10).
+
+### Edit actions
+
+- **Undo** — `Ctrl+Z` or the Undo button. Up to 50 levels.
+- **Delete** — select a shape then press `Delete` / `Backspace`, or click
+  the Delete button. Asks for confirmation when deleting all.
+- **Delete All** — removes all annotations (confirm dialog).
+- **Escape** — deselects and switches back to Select tool.
+
+### Selection feedback
+
+Selected annotations show a **blue glow** regardless of type. Resizable shapes
+(rect, highlight, line, arrow, text, bubble, redact) additionally show
+transformer handles for resize.
+
+### Annotations import / export
+
+- **Export** — saves `<name>_annotations.json` — a standalone copy of the
+  annotation document. Useful for backup or sharing without the PNG.
+- **Import** — loads a JSON file back. Validates schema and confirms before
+  replacing existing annotations.
+
+### Saving
+
+- **Save Editable** — embeds annotations as an `iTXt` metadata chunk in the
+  PNG. Downloads as `<name>_annotated.png`. Reopen this file in the editor
+  to continue editing.
+- **Save Flat** — burns annotations onto the image pixels. Downloads as
+  `<name>_marked.png`. Not re-editable but works in any viewer.
+
+### Inline dialogs
+
+Browser `prompt()` and `confirm()` are replaced with styled in-app dialogs:
+
+- **Text / Bubble input** — textarea, Enter to confirm, Shift+Enter for
+  newline, Escape to cancel.
+- **Confirm** — for Delete All and Import-over-existing. Enter confirms,
+  Escape cancels.
 
 ## Schema
 
 ```json
 {
   "schemaVersion": "1.0.0",
-  "appId": "ita-annotator",
+  "appId": "evidence-annotator",
   "imageSize": { "w": 1920, "h": 1080 },
   "createdAt": "2026-06-25T08:00:00.000Z",
   "modifiedAt": "2026-06-25T08:30:00.000Z",
   "annotations": [
-    { "id": "uuid", "type": "rect",  "x": 0, "y": 0, "w": 100, "h": 50, "stroke": "#ff0000", "strokeWidth": 3 },
-    { "id": "uuid", "type": "arrow", "from": [0, 0], "to": [100, 100], "stroke": "#ff0000", "strokeWidth": 3 },
-    { "id": "uuid", "type": "text",  "x": 0, "y": 0, "text": "Note", "size": 18, "color": "#000000" }
+    { "id": "uuid", "type": "rect",      "x": 0, "y": 0, "w": 100, "h": 50, "stroke": "#ff0000", "strokeWidth": 3 },
+    { "id": "uuid", "type": "highlight", "x": 0, "y": 0, "w": 100, "h": 50, "color": "#ffff00", "opacity": 0.35 },
+    { "id": "uuid", "type": "redact",    "x": 0, "y": 0, "w": 100, "h": 50 },
+    { "id": "uuid", "type": "line",      "from": [0, 0], "to": [100, 100], "stroke": "#ff0000", "strokeWidth": 3 },
+    { "id": "uuid", "type": "arrow",     "from": [0, 0], "to": [100, 100], "stroke": "#ff0000", "strokeWidth": 3 },
+    { "id": "uuid", "type": "pen",       "points": [0, 0, 10, 20, 30, 40], "stroke": "#ff0000", "strokeWidth": 3 },
+    { "id": "uuid", "type": "text",      "x": 0, "y": 0, "text": "Note", "size": 18, "color": "#ff0000" },
+    { "id": "uuid", "type": "marker",    "x": 0, "y": 0, "number": 1, "color": "#ff0000", "radius": 16 },
+    { "id": "uuid", "type": "bubble",    "x": 0, "y": 0, "text": "Note", "size": 14, "stroke": "#ff0000", "strokeWidth": 2, "fill": "#fffde7", "color": "#000000", "pointerDirection": "down" }
   ]
 }
 ```
 
-Coordinates are in **image pixel space** (origin top-left). On open, if the
-PNG's actual dimensions differ from `imageSize`, a warning is logged but
-annotations are still rendered at their stored coordinates.
+Coordinates are in **image pixel space** (origin top-left). The editor scales
+the canvas to fit the viewport on load; all stored coordinates are at the
+original image resolution.
 
 ## Verification checklist
 
-Run these in order to confirm the round-trip is solid:
+1. Open a fresh PNG → empty canvas, status bar says "no annotations found".
+2. Draw one of each tool type → all appear with correct stroke/color.
+3. Click a shape → blue glow appears; transformer handles appear on resizable
+   shapes.
+4. Drag to move, drag handles to resize → shape updates correctly.
+5. Double-click a Text or Bubble → inline edit dialog opens.
+6. Undo several times → shapes revert correctly.
+7. Click **Save Editable** → downloads `<name>_annotated.png`.
+8. Open the downloaded file → all annotations reload as editable shapes.
+   **This is the key round-trip test.**
+9. Click **Save Flat** → downloads `<name>_marked.png`; annotations burned in.
+10. Export annotations as JSON → valid file downloads.
+11. Import that JSON back → annotations restore (confirm dialog shown if
+    existing annotations are present).
+12. Try a PNG with Japanese text in a Text annotation → UTF-8 round-trips
+    cleanly.
 
-1. Open a fresh PNG with no annotations → empty canvas, status says
-   "no annotations found".
-2. Draw a rectangle, arrow, and text → all appear with the chosen
-   stroke/color.
-3. Click a shape → transformer handles appear; drag to move; drag handles to
-   resize; press Delete to remove.
-4. Click Save → browser downloads `<name>_annotated.png`.
-5. Open the downloaded file → annotations reappear as editable shapes.
-   **This is the key test.**
-6. Edit, save again, reopen → updates persist.
-7. Try with a PNG containing Japanese characters in the text annotation →
-   UTF-8 should round-trip cleanly.
+## Known limitations
 
-## Known prototype limitations (intentional)
-
-- **Browser download only.** No "save in place" — the browser security model
-  doesn't allow it. The production `pywebview` version saves directly via
-  Python.
-- **No undo/redo.** Snapshot-based undo of `state.document` is straightforward
-  to add later.
-- **Text edit via `prompt()`.** Replace with an inline `<textarea>` overlay
-  for v1.
-- **No zoom/pan.** Add when needed.
-- **No mobile-optimised touch UX.** Konva supports touch; the toolbar
-  doesn't.
+- **Browser download only.** No save-in-place — browser security model
+  prevents it. The production `pywebview` version saves directly via Python.
+- **PNG only for Save Editable.** JPEG and WebP have no standardized plain-text
+  metadata chunk equivalent to PNG `iTXt`.
+- **No zoom/pan.** Image is scaled to fit the viewport on load but cannot be
+  zoomed further. Add when needed.
+- **No mobile-optimised touch UX.** Konva supports touch; the toolbar layout
+  does not.
 
 ## Migration to pywebview
-
-When the prototype proves the concept, port like this:
 
 | Prototype (browser)            | Production (pywebview)                         |
 |--------------------------------|------------------------------------------------|
