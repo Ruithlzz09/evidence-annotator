@@ -1,3 +1,4 @@
+// Copyright (c) 2026. All Rights Reserved. Proprietary and confidential.
 // png-chunks.js
 // Pure-JS PNG iTXt chunk read/write. No deps beyond pako (loaded globally via <script>).
 //

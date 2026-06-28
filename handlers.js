@@ -1,3 +1,4 @@
+// Copyright (c) 2026. All Rights Reserved. Proprietary and confidential.
 // handlers.js — DOM wiring, overlays, status bar
 
 // ── Text input overlay ────────────────────────────────────────────────────

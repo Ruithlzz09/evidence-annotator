@@ -1,3 +1,4 @@
+// Copyright (c) 2026. All Rights Reserved. Proprietary and confidential.
 // app.js — editor logic: state, canvas, tools, save, import/export
 
 // ── State ──────────────────────────────────────────────────────────────────
